@@ -1,100 +1,82 @@
-import React, { useContext, useState } from "react";
-import { UserContext } from "../context/UserProvider";
-import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
 import { useForm } from "react-hook-form";
-import { formValidate } from "../utils/formValidate";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserProvider";
 import { erroresFirebase } from "../utils/erroresFirebase";
+import { formValidate } from "../utils/formValidate";
 
-import FormInput from "../componentes/FormInput";
-import FormError from "../componentes/FormError";
-import Title from "../componentes/Title";
-import Button from "../componentes/Button";
+import FormError from "../components/FormError";
+import FormInput from "../components/FormInput";
 
 const Register = () => {
-  //const [email, setEmail] = useState("natalia_a.hernandez@uao.edu.co");
-  //const [password, setPassword] = useState("12345");
-  const { registerUser } = useContext(UserContext);
   const navegate = useNavigate();
+  const { registerUser } = useContext(UserContext);
+  const { required, patternEmail, minLength, validateTrim, validateEquals } =
+    formValidate();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     getValues,
-  } = useForm();
-  const { required, patternEmail, minLength, validateTrim, validateEquals } =
-    formValidate();
+    setError,
+  } = useForm({
+    defaultValues: {
+      email: "edwin1@test.edu.co",
+      password: "123123",
+      repassword: "123123",
+    },
+  });
 
   const onSubmit = async ({ email, password }) => {
-    console.log("Procesando formulario--->_", email, password);
     try {
       await registerUser(email, password);
+      navegate("/");
     } catch (error) {
-      console.log(error, code);
+      console.log(error.code);
+      setError("firebase", {
+        message: erroresFirebase(error.code),
+      });
     }
   };
 
-  /*const handleSubmit = async (e) => {
-    e.preventDefault(); //Previene recargar todo el sitio
-
-    console.log("Enviando datos: ", email, " ", password);
-    try {
-      await registerUser(email, password);
-    } catch (error) {
-      console.log(error.code);
-    }
-  };*/
-
   return (
     <>
-      <Title text="Register" />
+      <h1>User Register</h1>
+      <FormError error={errors.firebase} />
       <form onSubmit={handleSubmit(onSubmit)}>
         <FormInput
           type="email"
-          name=""
-          id=""
-          placeholder="Email"
+          placeholder="Ingrese email"
           {...register("email", {
             required,
             pattern: patternEmail,
           })}
-          label="Ingresa tu correo"
-          error={errors.email}
         >
           <FormError error={errors.email} />
         </FormInput>
 
-        {/* {errors.email && <p>{errors.email.message} </p>} */}
         <FormInput
           type="password"
-          name=""
-          id=""
-          placeholder="Password"
+          placeholder="Ingrese Password"
           {...register("password", {
-            required,
             minLength,
             validate: validateTrim,
           })}
-          label="Ingresa tu Constraseña"
-          error={errors.password}
         >
           <FormError error={errors.password} />
         </FormInput>
 
         <FormInput
           type="password"
-          name=""
-          id=""
-          placeholder="Password"
-          {...register("password2", {
-            validate: validateEquals(getValues("password2")),
+          placeholder="Ingrese Password"
+          {...register("repassword", {
+            validate: validateEquals(getValues),
           })}
-          label="Repite la contraseña"
-          error={errors.password2}
         >
-          <FormError error={errors.password2} />
+          <FormError error={errors.repassword} />
         </FormInput>
-        {/* {errors.password2 && <p>{errors.password2.message} </p>} */}
-        <button type="submit">Enviar</button>
+        <button type="submit">Register</button>
       </form>
     </>
   );
